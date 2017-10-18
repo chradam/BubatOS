@@ -1,10 +1,13 @@
 package bubatos;
 
+import mborzymowski.shell.*;
+
 public class Main {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		
+		Shell sh = new Shell();
+		sh.startShell();
 	}
 
 }
