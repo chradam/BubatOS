@@ -9,8 +9,12 @@ import java.awt.GridLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +25,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.text.DefaultCaret;
+
+import bubatos.Core;
 
 
 public class Shell{
@@ -45,11 +51,15 @@ public class Shell{
 	/* OSTATNIA KOMENDA */
 	protected String lastcmd;
 	
+	/* HISTORIA KOMEND */
+	protected List<String> commands = new ArrayList<String>();
+	protected int cmdindex;
+	
 	
 	/* KONSTRUKTOR */
 	public Shell()
 	{
-		
+		this.cmdindex = 0;
 	}
 	
 	/* UTWORZENIE SHELL'A */
@@ -117,15 +127,62 @@ public class Shell{
 				else
 				{
 					lastcmd = komenda;
+					commands.add(komenda);
 				}
 				
 				lastcmd = lastcmd.toLowerCase();
 				
 				//przekazanie komendy do funkcji
 				execute(komenda.toLowerCase());
+				
+				cmdindex=0;
 			}
-			
 		});
+        this.cmd.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+				
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				if(e.getKeyCode() == KeyEvent.VK_UP)
+				{
+					//cmd.setText(commands.get(commands.size()-(cmdindex)));
+					if(commands.size()>cmdindex)
+					{
+						cmdindex++;
+						cmd.setText(commands.get(commands.size()-(cmdindex)));
+					}
+				}
+				if(e.getKeyCode() == KeyEvent.VK_DOWN)
+				{
+					cmdindex--;
+					if(cmdindex < 0)
+					{
+						cmd.setText("");
+						cmdindex=0;
+					}
+					else
+					{
+						//cmdindex--;
+						cmd.setText(commands.get(commands.size()-(cmdindex+1)));
+						//System.out.println("sas");
+					}
+				}
+				System.out.println("Pokzalem index: "+cmdindex);
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+        	
+        });
 	}
 	
 	/* POWITANIE */
@@ -145,7 +202,7 @@ public class Shell{
 		}
 		
 		area.setText("");
-		area.setFont(new Font("Lucida Console", Font.CENTER_BASELINE, 16));
+		area.setFont(new Font("Lucida Console", Font.CENTER_BASELINE, 13));
 		echo("");
 		
 		//focus na cmd 
@@ -207,7 +264,7 @@ public class Shell{
 	{
 		if(this.pcounter == 0)
 		{
-			return this.drv + "\\:";
+			return this.drv + ":\\";
 		}
 		else
 		{
@@ -226,32 +283,60 @@ public class Shell{
 				
 			}
 			
-			return this.drv + "\\:" + totalpath;
+			return this.drv + ":\\" + totalpath;
 		}
 	}
 	
 	/* BINDY NA KOMENDY */
-	public void execute(String command)
-	{
-		if(command.matches("^cd.*"))
+	public void execute(String command, boolean isScript)
+	{	
+		if(command.matches("^cd[ ].*") | command.matches("^cd$"))
 		{
-			//usuniecie "cd" zeby miec same katalogi
-			Pattern p2 = Pattern.compile("cd[ ]*");
-			Matcher m2 = p2.matcher(command);
-			
-			command = m2.replaceAll("");
-			
-			String[] katalogi = command.split("\\\\");
-			
-			
-			
-			System.out.println(command);
-			this.path[this.pcounter] = "xd";
-			this.pcounter++;
+			if(command.matches("^cd[ ]*"))
+			{
+				//do nothing
+			}
+			else
+			{
+				//TODO poprawic jak bedzie klasa zarzadzania plikami
+				
+				//usuniecie "cd" zeby miec same katalogi
+				Pattern p2 = Pattern.compile("cd[ ]");
+				Matcher m2 = p2.matcher(command);
+				
+				command = m2.replaceAll("");
+				
+				String[] katalogi = command.split("\\\\");
+				
+				
+				
+				System.out.println(command);
+				this.path[this.pcounter] = "xd";
+				this.pcounter++;
+			}
+		}
+		else if(command.matches("^run[ ].*") | command.matches("^run$"))
+		{
+			if(command.matches("^run[ ]*"))
+			{
+				this.echo("Nie podano sciezki skryptu", false);
+			}
+			else
+			{
+				//usuniecie "run" zeby miec sama sciezke
+				Pattern p2 = Pattern.compile("run[ ]");
+				Matcher m2 = p2.matcher(command);
+				
+				command = m2.replaceAll("");
+				
+				this.runScript(command);
+			}			
 		}
 		else if(command.matches("^help$"))
 		{
-			this.echo("HELP", false);
+			this.echo("Dostepne komendy: ", false);
+			this.echo("    - cd: przejscie do danego katalogu", false);
+			this.echo("    - run skrypt: uruchomienie skryptu", false);
 		}
 		else if(command.matches("[ ]*"))
 		{
@@ -263,7 +348,48 @@ public class Shell{
 			this.echo("Dostepne komendy po wpisaniu help", false);
 		}
 		
-		//sciezka na koniec
-		this.echo("");
+		if(!isScript)
+		{
+			//sciezka na koniec
+			this.echo("");
+		}
+	}
+	
+	public void execute(String command)
+	{
+		this.execute(command, false);
+	}
+	
+	public boolean wpisano(String str)
+	{
+		if(str.matches("^"+str+"[ ].*") | str.matches("^"+str+"$"))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	
+	
+	
+	
+	private void runScript(String path)
+	{
+		String[] skrypt = Core.readFile(path);
+		
+		if(skrypt != null)
+		{
+			for(String komenda : skrypt)
+			{
+				this.execute(komenda, true);
+			}
+		}
+		else
+		{
+			this.echo("Blad odczytu pliku", false);
+		}
 	}
 }
