@@ -1,5 +1,5 @@
 package semaphore;
-
+//przykładowy program, który w miare prezentuje jak to powinno działa. Chyba XD
 public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
