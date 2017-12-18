@@ -1,6 +1,5 @@
 package semaphore;
-//ogólnie na moje działa, tylko nie ma pełnej funkcjonalnosci bo nie ma planisty. Wątki będą zastąpione przez procesy. 
-//Jak coś to pytać, prosić o dodatkowe rzeczy i opierdalać itd.
+
 import java.util.LinkedList;
 
 public class Semaphore {
@@ -9,6 +8,7 @@ private boolean stan;
 public String name;
 public LinkedList<Thread> WaitingList= new LinkedList <Thread>();
 public LinkedList <Thread> ReadyList = new LinkedList<Thread>();
+public boolean IsUsed;
 
 public Semaphore( String name) {
 	this.stan=true;
@@ -23,6 +23,8 @@ public void P (Thread t) throws InterruptedException
 {
 	if( stan==true)
 	{
+		IsUsed=false;
+		IsUsed=true;
 		System.out.println("Semafor jest juz podniesiony. Proces przechodzi dalej");
 		stan=false; // semafor podniesiony, proces opuszcza semafor i wykonuje critical section 
 		System.out.println("Proces" + t.getName() +" wykonuje sie");
@@ -43,10 +45,12 @@ public void V(Thread t) throws InterruptedException
 	{
 		if(WaitingList.isEmpty()==false)
 		{
+			IsUsed=false;
 			t=WaitingList.getFirst();
 			System.out.println("Proces" + t.getName()+" zmienia status na gotowy");
 			ReadyList.add(t);
 			WaitingList.removeFirst();
+			IsUsed=true;
 			stan=true;
 			P(t);
 		}
@@ -57,6 +61,21 @@ public void V(Thread t) throws InterruptedException
 		}
 	}
 	else {System.out.println("Semafor jest juz aktualnie podniesiony");}
+}
+
+	
+//to dla Adama, ale ogólnie patrząc na systemy innych to oni jakoś tego nie mieli
+//i chyba samymi P i V się można porozumiewać z tym
+public boolean isIsUsed(Thread t) {
+	if(IsUsed==true)
+	{
+		System.out.println("Plik jest aktualnie uzywany.");
+		return IsUsed;
+	}
+	else{
+		System.out.println("Plik nie jest aktualnie używany");
+		return IsUsed;
+	}
 }
 
 }
