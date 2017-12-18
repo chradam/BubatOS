@@ -1,5 +1,6 @@
 package semaphore;
-//ogólnie na moje działa, tylko nie ma pełnej funkcjonalnosci bo nie ma planisty. Wątki będą zastąpione przez procesy. Jak coś to pytać, prosić o dodatkowe rzeczy itd.
+//ogólnie na moje działa, tylko nie ma pełnej funkcjonalnosci bo nie ma planisty. Wątki będą zastąpione przez procesy. 
+//Jak coś to pytać, prosić o dodatkowe rzeczy i opierdalać itd.
 import java.util.LinkedList;
 
 public class Semaphore {
